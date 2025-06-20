@@ -69,10 +69,6 @@ coverage.xml
 .pytype/
 .ruff_cache/
 
-# Local database files
-*.sqlite3
-*.db
-
 # Python wheels / build artefacts
 *.whl
 wheelhouse/
@@ -81,3 +77,11 @@ wheelhouse/
 .DS_Store 
 
 *.docx
+
+# Local database files
+*.sqlite3
+*.db
+
+# Large pretrained models (dlib etc.) – do not commit!
+models/*.dat
+models/*.bz2

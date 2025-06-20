@@ -1,3 +1,9 @@
 fastapi
 pillow
 pytest
+uvicorn[standard]==0.24.0
+
+# ---- native-code packages (pin to wheel versions to avoid source builds) ----
+opencv-python-headless==4.8.1.78    # last release with universal2 wheels (no compile step)
+dlib==19.24.4                       # wheel available for cp311 macOS
+numpy>=1.24

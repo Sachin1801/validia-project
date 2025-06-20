@@ -1,7 +1,12 @@
+from typing import List, Optional, Tuple
+
 from pydantic import BaseModel
 
 
 class Profile(BaseModel):
-    """Represents a facial profile description."""
+    """Represents a facial profile description with numeric metrics."""
 
-    description: str
+    landmarks: List[Tuple[int, int]]
+    eye_distance: float
+    yaw: float
+    description: Optional[str] = None
