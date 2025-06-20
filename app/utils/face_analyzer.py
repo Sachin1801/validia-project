@@ -33,11 +33,14 @@ def analyze_face(image_bytes: bytes) -> Dict[str, any]:
         ValueError: If no face is detected.
         RuntimeError: If the predictor model cannot be loaded.
     """
-    # Convert bytes to numpy array & decode image
+    # Convert bytes to numpy array & decode image first
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError("Provided bytes do not represent a valid image")
+
+    # Ensure landmark predictor can be loaded (raises RuntimeError if missing)
+    predictor = _load_predictor()
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -48,7 +51,6 @@ def analyze_face(image_bytes: bytes) -> Dict[str, any]:
 
     # Use the first detected face
     rect = rects[0]
-    predictor = _load_predictor()
     shape = predictor(gray, rect)
     landmarks: List[Tuple[int, int]] = [(pt.x, pt.y) for pt in shape.parts()]
 

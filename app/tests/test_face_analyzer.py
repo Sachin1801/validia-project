@@ -16,12 +16,13 @@ def test_analyze_face_missing_model(monkeypatch, tmp_path):
         "app.utils.face_analyzer.MODEL_PATH", str(tmp_path / "missing.dat")
     )
 
-    # Use a 1x1 PNG black pixel as minimal valid image bytes
-    import base64
+    # Generate a minimal valid 1x1 JPEG image in-memory so OpenCV can decode it
+    from io import BytesIO
+    from PIL import Image
 
-    img_bytes = base64.b64decode(
-        b"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
-    )
+    buffer = BytesIO()
+    Image.new("RGB", (1, 1), color=(0, 0, 0)).save(buffer, format="JPEG")
+    img_bytes = buffer.getvalue()
 
     with pytest.raises(RuntimeError):
         analyze_face(img_bytes)
