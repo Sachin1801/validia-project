@@ -53,4 +53,45 @@ async def create_profile(file: UploadFile = File(...)) -> Profile:
         eye_distance=profile_data["eye_distance"],
         yaw=profile_data["yaw"],
         description=description,
+        aligned_face=profile_data.get("aligned_face"),
+    )
+
+
+@router.post(
+    "/create-profile-extended",
+    response_model=Profile,
+    summary="Upload an image to generate a creative facial profile",
+    description="Returns landmarks, metrics, plus emotion and symmetry scores.",
+    responses={
+        200: {"description": "Successful creative profile generation"},
+        400: {"description": "Invalid input or face not found"},
+    },
+)
+async def create_profile_extended(
+    file: UploadFile = File(...),
+) -> Profile:  # noqa: D401
+    """Create an extended facial profile with additional creative metrics."""
+    content = await file.read()
+
+    try:
+        data = analyze_face(content)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # Creative placeholder metrics (can be replaced with real models later)
+    symmetry = round(1 - abs(data["eye_distance"] - 60) / 100, 2)
+    emotion = "neutral"
+    attractiveness = round((data["eye_distance"] / 100) * 5, 1)
+
+    description = (
+        f"Emotion: {emotion}; Symmetry: {symmetry}; "
+        f"Attractiveness: {attractiveness}/5"
+    )
+
+    return Profile(
+        landmarks=data["landmarks"],
+        eye_distance=data["eye_distance"],
+        yaw=data["yaw"],
+        description=description,
+        aligned_face=data.get("aligned_face"),
     )
