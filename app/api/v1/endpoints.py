@@ -12,7 +12,29 @@ async def ping():
     return {"ping": "pong"}
 
 
-@router.post("/create-profile", response_model=Profile, summary="Create facial profile")
+@router.post(
+    "/create-profile",
+    response_model=Profile,
+    summary="Create facial profile",
+    responses={
+        400: {
+            "description": "Bad request – invalid image bytes or no face detected",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "No face detected in the image"}
+                }
+            },
+        },
+        500: {
+            "description": "Server error – landmark model missing or cannot be loaded",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Unable to load facial landmark model"}
+                }
+            },
+        },
+    },
+)
 async def create_profile(file: UploadFile = File(...)) -> Profile:
     """Create a facial profile from an uploaded image."""
     content = await file.read()
