@@ -15,6 +15,17 @@ router = APIRouter(tags=["bonus"])
     response_model=Profile,
     summary="Verify face authenticity",
     description="Generates a facial profile and performs basic liveness checks (stub).",
+    responses={
+        400: {
+            "description": "Bad request – invalid image data or no face detected",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "No face detected in the image"}
+                }
+            },
+        },
+        422: {"description": "Validation error – file not provided"},
+    },
 )
 async def verify_face(file: UploadFile = File(...)) -> Profile:  # noqa: D401
     """Upload an image and return a facial profile with a liveness placeholder."""
@@ -39,6 +50,15 @@ async def verify_face(file: UploadFile = File(...)) -> Profile:  # noqa: D401
     response_model=DeepfakeResult,
     summary="Detect possible deepfakes (stub)",
     description="Returns a dummy deepfake confidence score between 0 and 1.",
+    responses={
+        400: {
+            "description": "Bad request – invalid image data",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid image data"}}
+            },
+        },
+        422: {"description": "Validation error – file not provided"},
+    },
 )
 async def detect_deepfake(file: UploadFile = File(...)) -> DeepfakeResult:  # noqa: D401
     """Upload an image/video frame and return a stub deepfake prediction."""
