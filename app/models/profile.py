@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Profile(BaseModel):
@@ -10,3 +10,4 @@ class Profile(BaseModel):
     eye_distance: float
     yaw: float
     description: Optional[str] = None
+    id: Optional[str] = Field(default=None, description="Unique profile identifier")

@@ -5,6 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.utils import face_analyzer as fa
+import app.api.v1.bonus_endpoints as be
 
 client = TestClient(app)
 
@@ -37,3 +39,37 @@ def test_detect_deepfake_stub():
     data = res.json()
     assert 0 <= data["confidence"] <= 1
     assert isinstance(data["is_deepfake"], bool)
+
+
+# --------- new profile identification tests ----------
+
+
+def dummy_profile():
+    return {
+        "landmarks": [(i, i) for i in range(68)],
+        "eye_distance": 100.0,
+        "yaw": 0.0,
+    }
+
+
+def test_identify_matching(monkeypatch):
+    # Monkeypatch analyze_face to return deterministic profile
+    fake = lambda _bytes: dummy_profile()
+    monkeypatch.setattr(fa, "analyze_face", fake)
+    monkeypatch.setattr(be, "analyze_face", fake)
+
+    # store profile
+    res = client.post(
+        "/v1/store-profile", files={"file": ("img.jpg", b"stub", "image/jpeg")}
+    )
+    assert res.status_code == 200
+    pid = res.json()["id"]
+
+    # identify with another image (same dummy)
+    res2 = client.post(
+        f"/v1/identify-face?profile_id={pid}",
+        files={"file": ("img2.jpg", b"stub2", "image/jpeg")},
+    )
+    assert res2.status_code == 200
+    out = res2.json()
+    assert out["is_match"] is True
