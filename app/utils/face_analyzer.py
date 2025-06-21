@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 import cv2
 import dlib
 import numpy as np
+import base64
 
 # Initialize dlib's detector and predictor only once (lazy load predictor because model file is large)
 _detector = dlib.get_frontal_face_detector()
@@ -10,6 +11,11 @@ _predictor = None  # type: ignore
 
 # Path to the pretrained model (user must download manually)
 MODEL_PATH = "models/shape_predictor_68_face_landmarks.dat"
+
+# Thresholds for image-quality gating
+BRIGHTNESS_MIN = 60
+BRIGHTNESS_MAX = 200
+LAPLACIAN_VAR_MIN = 100.0
 
 
 def _load_predictor() -> dlib.shape_predictor:
@@ -39,10 +45,23 @@ def analyze_face(image_bytes: bytes) -> Dict[str, any]:
     if img is None:
         raise ValueError("Provided bytes do not represent a valid image")
 
+    # Image quality gate — brightness & sharpness heuristics
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    brightness = float(np.mean(gray))
+    if brightness < BRIGHTNESS_MIN or brightness > BRIGHTNESS_MAX:
+        raise ValueError(
+            f"Image brightness {brightness:.1f} outside acceptable range {BRIGHTNESS_MIN}-{BRIGHTNESS_MAX}."
+        )
+
+    lap_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    if lap_var < LAPLACIAN_VAR_MIN:
+        raise ValueError(
+            f"Image too blurry (variance of Laplacian {lap_var:.1f} < {LAPLACIAN_VAR_MIN})."
+        )
+
     # Ensure landmark predictor can be loaded (raises RuntimeError if missing)
     predictor = _load_predictor()
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Detect faces
     rects = _detector(gray, 1)
@@ -62,8 +81,18 @@ def analyze_face(image_bytes: bytes) -> Dict[str, any]:
     # Placeholder values for yaw (head pose) until implemented
     yaw = 0.0
 
+    # Aligned 150×150 face chip
+    chip_img = dlib.get_face_chip(img, shape, size=150)
+    # Encode chip to JPEG base64
+    success, buf = cv2.imencode(".jpg", chip_img)
+    if not success:
+        raise RuntimeError("Failed to encode aligned face chip")
+    aligned_face_b64 = base64.b64encode(buf.tobytes()).decode("ascii")
+
     return {
         "landmarks": landmarks,
         "eye_distance": eye_distance,
         "yaw": yaw,
+        "aligned_face": aligned_face_b64,
+        "_chip": chip_img,  # internal use (not serialised in API)
     }

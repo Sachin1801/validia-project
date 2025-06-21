@@ -47,7 +47,13 @@ async def verify_face(file: UploadFile = File(...)) -> Profile:  # noqa: D401
         "(Liveness check: stub, always passes)"
     )
 
-    return Profile(**data, description=description)
+    return Profile(
+        landmarks=data["landmarks"],
+        eye_distance=data["eye_distance"],
+        yaw=data["yaw"],
+        description=description,
+        aligned_face=data.get("aligned_face"),
+    )
 
 
 @router.post(
@@ -97,7 +103,33 @@ class IdentifyResult(DeepfakeResult):  # reuse structure but different semantics
 async def store_profile(file: UploadFile = File(...)) -> Profile:  # noqa: D401
     content = await file.read()
     data = analyze_face(content)
-    profile = Profile(**data, description="Stored profile")
+
+    # Generate 5 jittered crops for augmentation
+    chip_img = data.get("_chip")
+    jitter_faces_b64 = None
+    if chip_img is not None:
+        try:
+            import dlib, cv2, base64, numpy as np
+
+            jitters = dlib.jitter_image(chip_img, 5)
+            encoded = []
+            for j in jitters:
+                ok, buf = cv2.imencode(".jpg", j)
+                if ok:
+                    encoded.append(base64.b64encode(buf.tobytes()).decode("ascii"))
+            jitter_faces_b64 = encoded or None
+        except Exception:
+            # Swallow any augmentation errors; continue without
+            jitter_faces_b64 = None
+
+    profile = Profile(
+        landmarks=data["landmarks"],
+        eye_distance=data["eye_distance"],
+        yaw=data["yaw"],
+        description="Stored profile",
+        aligned_face=data.get("aligned_face"),
+        jitter_faces=jitter_faces_b64,
+    )
     _id = profile_store.add(profile)
     profile.id = _id
     return profile
@@ -130,7 +162,17 @@ async def identify_face(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    probe_profile = Profile(**probe_data)
+    _fields = {
+        k: probe_data[k]
+        for k in (
+            "landmarks",
+            "eye_distance",
+            "yaw",
+            "aligned_face",
+        )
+        if k in probe_data
+    }
+    probe_profile = Profile(**_fields)
     distance = compare_profiles(ref_profile, probe_profile)
     distance = float(distance)
     is_match = bool(distance < THRESH_SIMILARITY)
