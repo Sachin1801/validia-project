@@ -10,7 +10,7 @@ from app.utils.profile_store import profile_store
 from app.utils.face_compare import compare_profiles
 
 router = APIRouter(tags=["bonus"])
-THRESHOLD = 0.70
+THRESHOLD = 0.60
 
 THRESH_SIMILARITY = 0.1  # tune later
 

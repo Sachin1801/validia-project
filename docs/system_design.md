@@ -62,6 +62,24 @@ flowchart TD
 * **CPU-only** – Dlib's HOG detector runs on CPU; OpenCV is the headless wheel.
 * **Single binary dependency** – Only the .dat landmark model is required at runtime (no other external assets).
 
+### Containerisation
+
+The repo ships with a `Dockerfile` and `docker-compose.yml`:
+
+* **Dockerfile** – Builds a slim Python 3.11 image, installs build essentials & CMake, compiles `dlib==20.0.0`, and downloads the 68-landmark model into `/app/models/`.  Uvicorn is launched on port 80 inside the container.
+* **docker-compose.yml** – Maps host **8000 → 80** and mounts the working directory for live-reload during development.
+
+Typical workflow:
+
+```bash
+# first build (≈ 5–10 min – compiles dlib)
+docker compose build
+# run & watch logs
+docker compose up            # http://localhost:8000/docs
+```
+
+CI on GitHub reuses the same Dockerfile to ensure parity between local and remote environments.
+
 ### Scaling Ideas
 
 * Add Redis or PostgreSQL for persistent profile storage.
