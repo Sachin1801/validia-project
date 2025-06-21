@@ -22,4 +22,4 @@ class _InMemoryProfileStore:
         return self._store[profile_id]
 
 
-profile_store = _InMemoryProfileStore() 
+profile_store = _InMemoryProfileStore()
