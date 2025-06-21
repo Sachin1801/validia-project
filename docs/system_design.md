@@ -12,26 +12,27 @@ flowchart TD
     end
 
     subgraph Utils
-        C1[face_analyzer.py] -->|dlib + OpenCV| E((dlib C++))
-        C2[profile_store.py]((RAM))
+        C1[face_analyzer.py] -->|"dlib + OpenCV"| E(("dlib C++"))
+        C2(("profile_store.py – RAM"))
         C3[face_compare.py]
     end
 
     subgraph Enhancements
-        U1[quality_gate (brightness + sharpness)]
-        U2[alignment helper (get_face_chip)]
-        U3[data_augment (jitter_image)]
+        U1["quality_gate<br/>(brightness + sharpness)"]
+        U2["alignment helper<br/>(get_face_chip)"]
+        U3["data_augment<br/>(jitter_image)"]
     end
 
     C1 --> U1
-    U1 --> U2 --> U3
+    U1 --> U2
+    U2 --> U3
 
     subgraph Models
         F[profile.py]
         G[deepfake.py]
     end
 
-    A -->|HTTP multipart-image| C
+    A -->|"HTTP multipart-image"| C
     A --> D
 
     C -->|create-profile| C1 --> F
