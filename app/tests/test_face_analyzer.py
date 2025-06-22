@@ -1,6 +1,6 @@
 import pytest
 
-from app.utils.face_analyzer import analyze_face, MODEL_PATH
+from app.utils.face_analyzer import analyze_face
 
 
 def test_analyze_face_invalid_bytes():
@@ -31,7 +31,8 @@ def test_analyze_face_missing_model(monkeypatch, tmp_path):
 
 def test_quality_gate_too_dark():
     """A completely black image should trigger brightness ValueError."""
-    import numpy as np, cv2
+    import numpy as np
+    import cv2
 
     dark = np.zeros((32, 32, 3), dtype=np.uint8)
     _, enc = cv2.imencode(".jpg", dark)
@@ -41,7 +42,8 @@ def test_quality_gate_too_dark():
 
 def test_quality_gate_blurry():
     """Uniform gray image should fail Laplacian variance check."""
-    import numpy as np, cv2
+    import numpy as np
+    import cv2
 
     grey = np.full((32, 32, 3), 120, dtype=np.uint8)
     _, enc = cv2.imencode(".jpg", grey)
