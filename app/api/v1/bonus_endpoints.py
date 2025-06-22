@@ -109,7 +109,8 @@ async def store_profile(file: UploadFile = File(...)) -> Profile:  # noqa: D401
     jitter_faces_b64 = None
     if chip_img is not None:
         try:
-            import dlib, cv2, base64, numpy as np
+            import dlib
+            import base64
 
             jitters = dlib.jitter_image(chip_img, 5)
             encoded = []

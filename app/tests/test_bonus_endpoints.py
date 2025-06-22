@@ -1,7 +1,7 @@
 import base64
 from io import BytesIO
 
-import pytest
+import pytest  # noqa: F401
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -54,7 +54,9 @@ def dummy_profile():
 
 def test_identify_matching(monkeypatch):
     # Monkeypatch analyze_face to return deterministic profile
-    fake = lambda _bytes: dummy_profile()
+    def fake(_bytes):
+        return dummy_profile()
+
     monkeypatch.setattr(fa, "analyze_face", fake)
     monkeypatch.setattr(be, "analyze_face", fake)
 
