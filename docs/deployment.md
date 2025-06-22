@@ -12,6 +12,8 @@ docker build -t validia .
 
 # Run on http://localhost:8000
 docker run -p 8000:80 validia
+
+http://127.0.0.1:8000/docs this is where you can test and view all the endpoints created
 ```
 
 ### Live-reload during development
